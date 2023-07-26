@@ -1,0 +1,276 @@
+﻿@page "/"
+@using DCMLocker.Shared
+@using DCMLocker.Shared.Locker
+@using System.Media
+@using QRCoder
+
+@inject IJSRuntime _jsRuntime
+@inject DCMLocker.Kiosk.Cliente.TLockerCliente Cliente
+@inject IJSRuntime js
+@inject NavigationManager Nav
+<style>
+    .btn-keyboard {
+        background-color: #91B3C1;
+        height: 90px;
+        width: 180px;
+    }
+
+    .btn-keyboard-succes {
+        background-color: #8BFF7B;
+        height: 90px;
+        width: 180px;
+    }
+
+    .btn-keyboard-danger {
+        background-color: #FF7B7B;
+        height: 90px;
+        width: 180px;
+    }
+
+    .img-1 {
+        clear: both;
+        background: transparent;
+    }
+</style>
+@if (show)
+{
+
+    <div class="text-center">
+
+        <div class="text-center">
+            <h1>TOKEN DE ACCESO</h1>
+            <h3>Ingrese su token para abrir un Box</h3>
+        </div>
+
+
+        @if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn))
+        {
+
+            <form>
+                <div class="form-group" style="height: 60px; width: 400px;margin-left: auto;
+    margin-right: auto;">
+                    <input @ref="textinput" style="height=100%;"
+                   @bind="token"
+                   @onkeydown="Change"
+                   @onkeydown:preventDefault="true"
+                   @onkeydown:stopPropagation="true"
+                   type="password" class="form-control form-control-user inputfocus" autofocus />
+                </div>
+            </form>
+
+            @if (!IsBussy)
+            {
+                <div class="col-lg-12">
+                    <div class="col-lg-12 my-2">
+                        <div class="row">
+                            <div class="mx-auto">
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("1");}; }'>1</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("2");}; }'>2</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("3");}; }'>3</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mx-auto">
+                                <br />
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("4");}; }'>4</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("5");}; }'>5</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("6");}; }'>6</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mx-auto">
+                                <br />
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("7");}; }'>7</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("8");}; }'>8</button>
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("9");}; }'>9</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mx-auto">
+                                <br />
+                                @if (!string.IsNullOrEmpty(token))
+                                {
+                                    <button class="btn btn-outline-danger btn-keyboard-danger" @onclick='() => { if(string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Borrar();} }'><span class="oi oi-arrow-circle-left"></span></button>
+                                }
+
+                                <button class="btn btn-outline-primary btn-keyboard" @onclick='() => { if(string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Add("0");} }'>0</button>
+
+                                @if (!string.IsNullOrEmpty(token))
+                                {
+                                    <button class="btn btn-outline-success btn-keyboard-succes" @onclick='() => { if(string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn)){Accion();} }'><span class="oi oi-check"></span></button>
+                                }
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mx-auto">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            }
+
+        }
+
+
+    </div>
+}
+else
+{
+    <center>
+        <div class="text-center" style="margin-top: 25%;">
+            <div class="text-center" style="margin-top: 25%;">
+                <h1>LOCKER INTELIGENTE</h1>
+                <h2>SPL111</h2>
+                <h3>v3.3</h3>
+                <h4>19 de enero de 2023</h4>
+            </div>
+
+            <br />
+            <br />
+            <br />
+            @if (!string.IsNullOrEmpty(Msn))
+            {
+                <div class="alert alert-success" style="display: table ;margin-left: auto;margin-right: auto;">
+                    <h1><strong>@Msn</strong></h1>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn))
+            {
+                <div class="alert alert-danger" style="display: table ;margin-left: auto;margin-right: auto;margin-top:auto;margin-bottom:auto;">
+                    <h1><strong>@ErrorMsn</strong></h1>
+                </div>
+            }
+        </div>
+
+    </center>
+}
+@code
+{
+    bool show = false;
+    SystemNetwork[] Ips { get; set; }
+    byte[]? qrCodeImage;
+    string url;
+    bool isCorrect;
+    bool isIncorrect;
+    bool IsBussy = false;
+    string token;
+    string ErrorMsn = null;
+    string InternetError = null;
+    string Msn = null;
+    protected ElementReference textinput;
+    bool isconectar { get; set; }
+    string[] SSID { get; set; }
+    protected override async void OnInitialized()
+    {
+        await Task.Delay(3000);
+        show = true;
+        StateHasChanged();
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (show)
+        {
+            await js.InvokeVoidAsync("SetFocusToElement", textinput);
+        }
+    }
+
+
+    async void Add(string c)
+    {
+        ErrorMsn = "";
+        if (token == null) token = "";
+        token += c;
+        await js.InvokeVoidAsync("SetFocusToElement", textinput);
+
+
+    }
+
+
+
+    async void Borrar()
+    {
+        ErrorMsn = "";
+        if (token == null) token = "";
+        else
+        {
+            if (token.Length >= 1)
+            {
+                token = token.Substring(0, token.Length - 1);
+            }
+        }
+        await js.InvokeVoidAsync("SetFocusToElement", textinput);
+    }
+    async void Accion()
+    {
+        if (token == "3942")
+        {
+            Nav.NavigateTo($"{Nav.Uri}red");
+        }
+        else
+        {
+            try
+            {
+                show = false;
+                Msn = "";
+                ErrorMsn = "";
+                Console.WriteLine("TOKEN ACCESO:" + token);
+                int r = await Cliente.TokenKey(token);
+                Msn = $"Box {(r + 1)} abierto ";
+                token = "";
+                StateHasChanged();
+                await Task.Delay(3000);
+                Msn = "";
+                show = true;
+            }
+            catch (Exception er)
+            {
+                show = false;
+                Console.WriteLine(er.Message);
+
+                ErrorMsn = "Error al utilizar token de apertura";
+
+                token = "";
+                StateHasChanged();
+                await Task.Delay(3000);
+                if (string.IsNullOrEmpty(ErrorMsn) && string.IsNullOrEmpty(Msn))
+                {
+                    await js.InvokeVoidAsync("SetFocusToElement", textinput);
+                }
+                ErrorMsn = "";
+                show = true;
+
+            }
+        }
+
+        StateHasChanged();
+    }
+
+
+
+    async void Change(KeyboardEventArgs args)
+    {
+        try
+        {
+
+            if ((args.Code == "Enter") || (args.Code == "NumpadEnter"))
+            {
+                if (!string.IsNullOrEmpty(token)) Accion();
+            }
+            else
+            {
+                if (Char.IsNumber(args.Key[0]))
+                {
+                    token += args.Key;
+                }
+
+            }
+        }
+        catch { }
+    }
+
+
+}

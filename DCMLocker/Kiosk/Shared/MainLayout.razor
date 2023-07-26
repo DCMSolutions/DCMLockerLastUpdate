@@ -1,0 +1,158 @@
+﻿@using DCMLocker.Shared
+@using DCMLocker.Shared.Locker
+@using System.Media
+@using Microsoft.AspNetCore.SignalR.Client
+@using QRCoder
+@using System.Diagnostics
+
+@inject HttpClient http
+@inject IJSRuntime _jsRuntime
+@inject DCMLocker.Kiosk.Cliente.TLockerCliente Cliente
+@inject IJSRuntime js
+@inject NavigationManager Nav
+
+
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="main">
+        <div class="content px-4">
+            <div class="row">
+                <div class="col-2" style="float:left">
+                    <img width="100%" src="img/Logo.png" />
+                </div>
+                <div class="col-8">
+                    @Body
+                </div>
+                @if (qrCodeImage != null && url != "")
+                {
+                    <div class="col-2" align="right">
+                        <img width="100%" src="data:image;base64,@System.Convert.ToBase64String(qrCodeImage)" />
+                    </div>
+                }
+                else if (ErrorMsn == null)
+                {
+                    <div class="col-2" align="right">
+                        <div class="alert alert-warning" style="display: table ;margin-left: auto;margin-right: auto;margin-top:auto;margin-bottom:auto;">
+                            <h3><center><strong>Cargando...</strong></center></h3>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-2" align="right">
+
+                        @foreach (var error in ErrorMsn)
+                        {
+                            if (error != "")
+                            {
+                                <div class="alert alert-danger" style="display: table ;margin-left: auto;margin-right: auto;margin-top:auto;margin-bottom:auto;">
+                                    <h3><center><strong>@error</strong></center></h3>
+                                </div>
+                                <br />
+                            }
+                        }
+                    </div>
+
+                }
+
+
+            </div>
+
+        </div>
+        @if (ISMensaje)
+        {
+            <div class="btn-flotante">
+                <p>@Mensaje</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+@code
+{
+    SystemNetwork[] Ips { get; set; }
+    byte[]? qrCodeImage = null;
+    string url = "";
+    private HubConnection hubConnection;
+    private int CantidadItems;
+    private string Mensaje;
+    private bool ISMensaje;
+    private List<string> ErrorMsn = new();
+    bool wifi = false;
+    bool ethernet = false;
+    bool connection = false;
+    protected override async Task OnInitializedAsync()
+    {
+
+        while (true)
+        {
+            try
+            {
+                Ips = await Cliente.System_GetIP();
+                if (Ips.Length == 0 && !connection)
+                {
+                    wifi = true;
+                    ethernet = false;
+                    connection = true;
+                    url = "";
+                    ErrorMsn.Clear();
+                    ErrorMsn.Add("No hay conexión Ethernet");
+                    ErrorMsn.Add("No hay conexión Wifi");
+                    StateHasChanged();
+
+                }
+                else if (Ips[0].IP == "192.168.2.3" && Ips.Length == 1 && !wifi)
+                {
+                    wifi = true;
+                    ethernet = false;
+                    connection = false;
+                    url = "";
+                    await http.GetAsync("System/ResetService");
+                    ErrorMsn.Clear();
+                    ErrorMsn.Add("No hay conexión Wifi");
+                    StateHasChanged();
+
+                }
+                else if (Ips[0].IP != "192.168.2.3" && !ethernet)
+                {
+                    wifi = true;
+                    ethernet = true;
+                    connection = false;
+                    url = "";
+                    ErrorMsn.Clear();
+                    ErrorMsn.Add("No hay conexión Ethernet");
+                    StateHasChanged();
+
+                }
+                else if (url == "" && Ips.Length == 2)
+                {
+                    url = Ips[1].IP;
+                    creaQR($"http://{url}:5020");
+                    wifi = false;
+                    ethernet = false;
+                    connection = false;
+                    await http.GetAsync("System/ResetService");
+                    StateHasChanged();
+                }
+
+
+            }
+            catch
+            {
+
+            }
+        }
+    }
+    async Task creaQR(string code)
+    {
+        QRCodeGenerator qrGenerator = new QRCodeGenerator();
+        QRCodeData qrCodeData = qrGenerator.CreateQrCode(code, QRCodeGenerator.ECCLevel.H);
+        BitmapByteQRCode qrCode = new BitmapByteQRCode(qrCodeData);
+        qrCodeImage = qrCode.GetGraphic(20);
+        StateHasChanged();
+
+    }
+
+}

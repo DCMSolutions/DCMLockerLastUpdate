@@ -1,0 +1,61 @@
+﻿@page "/BoxesAdmin"
+@inject NavigationManager Nav
+@using DCMLocker.Shared
+@using DCMLocker.Shared.Locker
+@inject DCMLocker.Client.Cliente.TLockerCliente cliente
+<h3>Administración de Boxes</h3>
+
+<form>
+    <div class="form-group">
+        <label><strong>Box</strong></label>
+        <select  @onchange="verpropietario" class="form-control form-control-user">
+            @for (int y = 0; y < 256; y++)
+            {
+                <option value="@y">@(y+1)</option>
+            }
+        </select>
+
+    </div>
+    <button type="button" class="btn btn-primary btn-user btn-block" @onclick="(() => Ver())">Administrar</button>
+    <br/>
+    <br/>
+    @if (users != null)
+    {
+        <h3>Usuarios del Box</h3>
+        <p>pulse sobre el usuario para ver sus propiedades.</p>
+        <ul>
+        @foreach (string s in users)
+        {
+            var y = s;
+            <li><a @onclick="(()=>GetUser(y))">@s</a></li>
+        }
+        </ul>
+
+    }
+
+</form>
+
+
+@code {
+
+    int Box;
+    string[] users { get; set; }
+
+    void Ver()
+    {
+        Nav.NavigateTo($"/BoxesAdmin/{Box}");
+    }
+
+    async void verpropietario(ChangeEventArgs e)
+    {
+        int boxaddr = Convert.ToInt32(e.Value.ToString());
+        Box = boxaddr;
+        users = await cliente.SearchUserFromBox(boxaddr);
+        StateHasChanged();
+    }
+    
+    void GetUser(string s)
+    {
+        Nav.NavigateTo($"/Usuario/{s.Replace("@", "%40").Replace(".", "%_")}");
+    }
+}

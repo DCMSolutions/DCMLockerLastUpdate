@@ -1,0 +1,120 @@
+﻿@page "/BoxesAdmin/{boxaddr:int}"
+@using DCMLocker.Shared
+@using DCMLocker.Shared.Locker
+@inject DCMLocker.Client.Cliente.TLockerCliente cliente
+@inject NavigationManager Nav
+
+<h3>Box @(boxaddr + 1)</h3>
+@if (Config != null)
+{
+<div class="p-1">
+    <form class="user">
+
+        <div class="form-group">
+            <label><strong>Habilitar</strong></label>
+            <p>
+                Habilita el uso de caja
+            </p>
+            <input type="checkbox" @bind="Config.Enable" class="form-control form-control-user" />
+        </div>
+        <div class="form-group">
+            <label><strong>Alarma</strong></label>
+            <p>
+                Indica el Nro de Alarma que se dispara en un cambio de estado de la caja
+            </p>
+            <input type="number" @bind="Config.AlamrNro" class="form-control form-control-user" />
+        </div>
+        <div class="form-group">
+            <label><strong>Sensor presente</strong></label>
+            <p>
+                Indica si el sensor de detección de objetos esta habilitado para su lectura
+            </p>
+            <input type="checkbox" @bind="Config.IsSensorPresent" class="form-control form-control-user" />
+        </div>
+        <div class="form-group">
+            <label><strong>Usuario propietario</strong></label>
+            <p>
+                Indica si el usuario es propietario de la caja o es una caja de usuario variable
+            </p>
+            <input type="checkbox" @bind="Config.IsUserFixed" class="form-control form-control-user" />
+        </div>
+        <div class="form-group">
+            <label><strong>Tipo de Caja</strong></label>
+            <p>Indica el modo de funcionamiento de la caja.</p>
+            <select @bind="typetemp" class="form-control form-control-user">
+                <option value="0">Normal</option>
+                <option value="1">Refrigerada</option>
+                <option value="2">Ctrl Temperatura</option>
+            </select>
+
+        </div>
+
+        <div class="form-group">
+            <label><strong>Temperatura Máxima</strong></label>
+            <p>
+                Máxima temperatura admitida para la caja
+            </p>
+            <input type="number" @bind="Config.TempMax" class="form-control form-control-user" />
+        </div>
+        <div class="form-group">
+            <label><strong>Temperatura Mínima</strong></label>
+            <p>
+                Mínima temperatura admitida para la caja
+            </p>
+            <input type="number" @bind="Config.TempMin" class="form-control form-control-user" />
+        </div>
+  
+    </form>
+    <br/>
+    <br/>
+    <br/>
+    <a @onclick="Save" class="btn-flotante" title="Guardar" style="background-color:green; color:white;"><span class="oi oi-check"></span></a>
+    <a @onclick="Retornar" class="btn-flotante btn-flotante-1" title="Cancelar" style="background-color:red; color:white;"><span class="oi oi-x"></span></a>
+
+</div>
+}
+else
+{
+<div class="abs-center">
+    <div class="spinner-grow text-secondary"></div>
+    <div class="spinner-grow text-secondary"></div>
+    <div class="spinner-grow text-secondary"></div>
+</div>
+}
+@code {
+    [Parameter]
+    public int boxaddr { get; set; }
+    TLockerMap Config;
+    int typetemp = 0;
+    string ErrorMsn { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+
+        Config = await cliente.GetBoxConfig(boxaddr);
+        typetemp = (int)Config.LockerType;
+    }
+
+    void Retornar()
+    {
+        Nav.NavigateTo("BoxesAdmin");
+    }
+
+    async Task Save()
+    {
+        ErrorMsn = "";
+        Config.LockerType = (TLockerMap.EnumLockerType)typetemp;
+        bool r = await cliente.SetBoxConfig(Config);
+        if (r)
+        {
+            //notificamos que los cambios fueron registrados
+            Nav.NavigateTo("BoxesAdmin");
+        }
+        else
+        {
+            ErrorMsn = "Error al guardar la información.";
+            StateHasChanged();
+            //advertencia porque no se grabaron los datos
+
+        }
+    }
+}

@@ -1,0 +1,72 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject DCMLocker.Client.Cliente.TLocker Locker
+
+
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+       
+        <div class="content px-4">
+            @Body
+        </div>
+        @if (ISMensaje)
+        {
+            <div class="btn-flotante">
+                <p>@Mensaje</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+@code
+{
+    private HubConnection hubConnection;
+
+    private int CantidadItems;
+    private string Mensaje;
+    private bool ISMensaje;
+
+
+    protected override Task OnInitializedAsync()
+    {
+
+        hubConnection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri("/LockerHub"))
+        .Build();
+
+        hubConnection.On<int, string>("LockerUpdated", (id, message) =>
+        {
+            var encodedMsg = $"{id}: {message}";
+            Console.WriteLine(encodedMsg);
+            Mensaje = encodedMsg;
+            ISMensaje = true;
+            Locker.IsChange();
+            StateHasChanged();
+            new System.Threading.Timer(tm_close, null, 5000, System.Threading.Timeout.Infinite);
+        });
+
+        hubConnection.StartAsync();
+
+        
+
+        return base.OnInitializedAsync();
+    }
+
+    private void tm_close(object state)
+    {
+        ISMensaje = false;
+        StateHasChanged();
+    }
+
+
+
+
+}

@@ -1,0 +1,123 @@
+﻿@page "/configuracion"
+@using DCMLocker.Shared
+@using DCMLocker.Shared.Locker
+@inject DCMLocker.Client.Cliente.TLockerCliente cliente
+@inject NavigationManager nav
+<h3>Configuración</h3>
+@if (Config != null)
+{
+    <div class="p-5">
+        <button class="btn btn-outline-secondary col-3" @onclick=changepassword>Cambiar contraseña</button>
+        <br>
+        <br>
+        <form class="user">
+
+            <div class="form-group">
+                <label><strong>ID</strong></label>
+                <p>Identificador unico de locker. Es utilizado para identificar a un locker en un sistema central.</p>
+                <input type="number" @bind="Config.LockerID" class="form-control form-control-user" />
+            </div>
+            <div class="form-group">
+                <label><strong>Tipo de Locker</strong></label>
+                <p>Contorlador utilizado por el locker para la apertura y sensado de box. Verifique con el instalador la correcta configuración.</p>
+                <select @bind="Config.LockerType" class="form-control form-control-user">
+                    <option value="0">TCP</option>
+                    <option value="1">RS</option>
+                </select>
+
+            </div>
+            <div class="form-group">
+                <label><strong>Modo de funcionamiento</strong></label>
+                <p>
+                    Modo de funcionamiento del locker.<br />
+                    NORMAL: los box son utilizados por usuarios registrados. <br />
+                    QR:Los box son utilizador por medios de tocken en formato QR
+                </p>
+                <select @bind="Config.LockerMode" class="form-control form-control-user">
+                    <option value="0">Normal</option>
+                    <option value="1">QR</option>
+                </select>
+
+            </div>
+            <div class="form-group">
+                <label><strong>Confirmación de Email</strong></label>
+                <p>
+                    Utilize la confirmación de email para validar la información de los usuarios.
+                    El email es utilizado para blanquear el password del usuario en caso de olvido.
+                </p>
+                <input type="checkbox" @bind="Config.IsConfirmarEmail" class="form-control form-control-user" />
+            </div>
+            <div class="border-dark" style="border-style:solid; border:1px;">
+                <h3>Servidor de Email</h3>
+                <p>Servidor de Email a utilizar para el envio de email, tanto para alarmas y notificaciones.</p>
+                <div class="form-group">
+                    <label><strong>Servidor Smtp</strong></label>
+                    <input type="text" @bind="Config.SmtpServer.Host" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>Port</strong></label>
+                    <input type="number" @bind="Config.SmtpServer.Port" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>From</strong></label>
+                    <input type="email" @bind="Config.SmtpServer.From" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>Asunto</strong></label>
+                    <input type="text" @bind="Config.SmtpServer.Asunto" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>Usuario</strong></label>
+                    <input type="text" @bind="Config.SmtpServer.UserName" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>Password</strong></label>
+                    <input type="password" @bind="Config.SmtpServer.Password" class="form-control form-control-user" />
+                </div>
+                <div class="form-group">
+                    <label><strong>Requiere SSL</strong></label>
+                    <input type="checkbox" @bind="Config.SmtpServer.EnableSSL" class="form-control form-control-user" />
+                </div>
+            </div>
+
+
+
+            <button type="button" class="btn btn-primary btn-user btn-block" @onclick="(() => Save())">Guardar</button>
+
+        </form>
+    </div>
+}
+else
+{
+    <p>Loading..</p>
+}
+
+
+@code {
+    LockerConfig Config;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        Config = await cliente.GetConfig();
+    }
+
+    async Task Save()
+    {
+        bool r = await cliente.SetConfig(Config);
+        if (r)
+        {
+            //notificamos que los cambios fueron registrados
+        }
+        else
+        {
+            //advertencia porque no se grabaron los datos
+
+        }
+    }
+
+    async Task changepassword()
+    {
+        nav.NavigateTo("/changeadminpassword");
+    }
+}

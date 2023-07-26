@@ -1,0 +1,4 @@
+Notas de la versión 2 (8/11/2022)
+
+- Se agregó código QR a la pantalla del teclado para poder acceder a la web de administración.
+- Se agregó código (3942) para acceder a configuración WiFi desde la pantalla del teclado.
